@@ -68,13 +68,14 @@ pip install -r requirements.txt
 
 ### **3. Run the Flask App**  
 ```bash
-python app.py
+python BCD.py
 ```  
 
 ### **4. Use the Web Interface**  
 - Open **http://127.0.0.1:5000/** in your browser.  
 - Upload a **thermal breast image**.  
 - Get predictions instantly.  
+
 
 ## **How This Helps Women**  
 ✔ **Multi-Model Precision:** Uses two specialized models to improve accuracy.  
