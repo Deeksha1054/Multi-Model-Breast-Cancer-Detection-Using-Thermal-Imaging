@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HER.AI - Breast Cancer Detection</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #d946a6;
+            --primary-dark: #b83584;
+            --secondary: #6366f1;
+            --accent: #ec4899;
+            --bg-main: #faf8f9;
+            --bg-card: #ffffff;
+            --text-primary: #1a1a1a;
+            --text-secondary: #6b7280;
+            --shadow: rgba(217, 70, 166, 0.1);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg-main);
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        /* Animated Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(217, 70, 166, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(236, 72, 153, 0.06) 0%, transparent 50%);
+            animation: drift 20s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        @keyframes drift {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(30px, -30px) rotate(5deg); }
+            66% { transform: translate(-20px, 20px) rotate(-5deg); }
+        }
+
+        /* Navbar */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 2px 20px var(--shadow);
+            z-index: 1000;
+            animation: slideDown 0.6s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(0); }
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.2rem 2rem;
+        }
+
+        .logo {
+            font-family: 'Crimson Pro', serif;
+            font-size: 1.6rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2.5rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 500;
+            position: relative;
+            transition: color 0.3s ease;
+            font-size: 0.95rem;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .nav-links a.active::after {
+            width: 100%;
+        }
+
+        /* Mobile Menu Button */
+        .mobile-menu-btn {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .mobile-menu-btn span {
+            width: 25px;
+            height: 3px;
+            background: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        /* Sections */
+        section {
+            min-height: 100vh;
+            padding: 120px 2rem 60px;
+            opacity: 0;
+            animation: fadeInUp 0.8s ease-out forwards;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Home Section */
+        #home {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .hero-content {
+            animation-delay: 0.2s;
+        }
+
+        h1 {
+            font-family: 'Crimson Pro', serif;
+            font-size: 4rem;
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            color: var(--text-secondary);
+            margin-bottom: 3rem;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-top: 4rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px var(--shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px var(--shadow);
+        }
+
+        .stat-number {
+            font-family: 'Crimson Pro', serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* Info Cards */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .info-card {
+            background: var(--bg-card);
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px var(--shadow);
+            transition: all 0.4s ease;
+            border: 2px solid transparent;
+        }
+
+        .info-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 40px rgba(217, 70, 166, 0.15);
+            border-color: var(--primary);
+        }
+
+        .info-card h3 {
+            font-family: 'Crimson Pro', serif;
+            font-size: 1.6rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .info-card p {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            font-size: 0.95rem;
+        }
+
+        /* Upload Section */
+        #upload {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .upload-container {
+            width: 100%;
+            max-width: 700px;
+            background: var(--bg-card);
+            padding: 3rem;
+            border-radius: 24px;
+            box-shadow: 0 8px 40px var(--shadow);
+        }
+
+        .upload-title {
+            font-family: 'Crimson Pro', serif;
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        #dropZone {
+            width: 100%;
+            min-height: 300px;
+            border: 3px dashed var(--primary);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(217, 70, 166, 0.05), rgba(99, 102, 241, 0.05));
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #dropZone::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        #dropZone:hover::before {
+            left: 100%;
+        }
+
+        #dropZone.dragover {
+            border-color: var(--accent);
+            background: linear-gradient(135deg, rgba(236, 72, 153, 0.1), rgba(99, 102, 241, 0.1));
+            transform: scale(1.02);
+        }
+
+        .drop-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.6;
+        }
+
+        .drop-text {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        #predictButton {
+            width: 100%;
+            margin-top: 2rem;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            box-shadow: 0 4px 15px var(--shadow);
+        }
+
+        #predictButton:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px var(--shadow);
+        }
+
+        #predictButton:disabled {
+            background: linear-gradient(135deg, #ccc, #aaa);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        #imagePreview {
+            margin-top: 2rem;
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px var(--shadow);
+            display: none;
+            animation: zoomIn 0.4s ease;
+        }
+
+        @keyframes zoomIn {
+            from {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        #result {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            font-size: 1.2rem;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 600;
+            animation: slideIn 0.4s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        #result.success {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+            color: var(--success);
+            border: 2px solid var(--success);
+        }
+
+        #result.warning {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05));
+            color: var(--danger);
+            border: 2px solid var(--danger);
+        }
+
+        /* About Section */
+        #about h2 {
+            font-family: 'Crimson Pro', serif;
+            font-size: 3rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .about-content {
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--bg-card);
+            padding: 3rem;
+            border-radius: 24px;
+            box-shadow: 0 8px 40px var(--shadow);
+            line-height: 1.8;
+        }
+
+        .about-content h3 {
+            font-family: 'Crimson Pro', serif;
+            font-size: 1.8rem;
+            color: var(--primary);
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .about-content p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            font-size: 1.05rem;
+        }
+
+        .about-content ul {
+            list-style: none;
+            margin: 1rem 0;
+        }
+
+        .about-content li {
+            padding: 0.5rem 0;
+            padding-left: 2rem;
+            position: relative;
+            color: var(--text-secondary);
+        }
+
+        .about-content li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-links {
+                position: fixed;
+                top: 70px;
+                left: -100%;
+                width: 100%;
+                height: calc(100vh - 70px);
+                background: rgba(255, 255, 255, 0.98);
+                backdrop-filter: blur(20px);
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 2rem;
+                transition: left 0.3s ease;
+            }
+
+            .nav-links.active {
+                left: 0;
+            }
+
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .subtitle {
+                font-size: 1.1rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .upload-container {
+                padding: 2rem;
+            }
+
+            .upload-title {
+                font-size: 2rem;
+            }
+
+            #about h2 {
+                font-size: 2.2rem;
+            }
+
+            .about-content {
+                padding: 2rem;
+            }
+        }
+
+        /* Scroll Animation */
+        .reveal {
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 0.6s ease;
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <div class="logo">HER.AI</div>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#home" class="nav-link active">Home</a></li>
+                <li><a href="#upload" class="nav-link">Upload</a></li>
+                <li><a href="#about" class="nav-link">About</a></li>
+            </ul>
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Home Section -->
+    <section id="home">
+        <div class="container">
+            <div class="hero-content">
+                <h1>AI-Powered Breast Cancer Detection</h1>
+                <p class="subtitle">Leveraging advanced deep learning models to provide rapid, accurate breast cancer screening through thermal imaging analysis</p>
+                
+                <div class="stats-grid reveal">
+                    <div class="stat-card">
+                        <div class="stat-number">95%+</div>
+                        <div class="stat-label">Detection Accuracy</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">&lt;5s</div>
+                        <div class="stat-label">Analysis Time</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">100%</div>
+                        <div class="stat-label">Non-Invasive</div>
+                    </div>
+                </div>
+
+                <div class="info-grid reveal">
+                    <div class="info-card">
+                        <h3>Comfortable & Non-Invasive</h3>
+                        <p>Unlike traditional mammography, our thermal imaging approach requires no compression or radiation exposure. Women can feel at ease during screening with this gentle, pain-free technology that respects your comfort and dignity.</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>Early Detection Saves Lives</h3>
+                        <p>Breast cancer is the most common cancer among women worldwide. When detected early, the 5-year survival rate is nearly 99%. Our AI system helps identify potential abnormalities quickly and non-invasively.</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>Know the Signs</h3>
+                        <p>Regular self-examinations and screenings are crucial. Look for lumps, changes in breast size or shape, skin dimpling, nipple discharge, or persistent pain. Consult a healthcare provider if you notice anything unusual.</p>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Upload Section -->
+    <section id="upload">
+        <div class="container">
+            <div class="upload-container">
+                <h2 class="upload-title">Upload Medical Image</h2>
+                <div id="dropZone">
+                    <div class="drop-icon">📸</div>
+                    <div class="drop-text">
+                        <strong>Drag and drop</strong> your thermal image here<br>
+                        or <strong>click to browse</strong>
+                    </div>
+                    <input type="file" id="fileInput" accept="image/*" style="display: none;">
+                </div>
+                <button id="predictButton" disabled>
+                    <span id="buttonText">Analyze Image</span>
+                </button>
+                <img id="imagePreview" alt="Uploaded Image">
+                <div id="result"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about">
+        <div class="container">
+            <h2>About Our System</h2>
+            <div class="about-content reveal">
+                <p>Our AI-powered breast cancer detection system uses state-of-the-art deep learning technology to analyze thermal imaging data and identify potential abnormalities with remarkable accuracy.</p>
+                
+                <h3>How It Works</h3>
+                <p>The system employs a two-stage detection pipeline:</p>
+                <ul>
+                    <li><strong>Stage 1:</strong> Initial screening using ResNet-18 architecture trained on thermal RGB images to classify tissue as NORMAL or potentially concerning (SICK)</li>
+                    <li><strong>Stage 2:</strong> For cases flagged as concerning, a secondary model performs detailed analysis to distinguish between benign and malignant abnormalities</li>
+                    <li><strong>Real-time Processing:</strong> Results are generated in seconds, providing immediate feedback for healthcare providers</li>
+                </ul>
+
+                <h3>Technology Stack</h3>
+                <p>Built with cutting-edge machine learning frameworks:</p>
+                <ul>
+                    <li>PyTorch deep learning framework for model training and inference</li>
+                    <li>ResNet-18 convolutional neural network architecture</li>
+                    <li>Flask web framework for seamless user interaction</li>
+                    <li>Thermal imaging analysis for non-invasive screening</li>
+                </ul>
+
+                <h3>Our Mission</h3>
+                <p>We believe that technology can democratize healthcare and save lives. By making advanced AI-powered screening accessible, we aim to increase early detection rates and improve patient outcomes worldwide. This tool is designed to assist medical professionals in their diagnostic process, not replace clinical judgment.</p>
+
+                <h3>Important Disclaimer</h3>
+                <p><strong>This system is a screening tool and should not be used as a sole basis for diagnosis.</strong> Always consult with qualified healthcare professionals for proper medical evaluation and diagnosis. Early detection through regular screening and professional medical care remains the gold standard for breast cancer management.</p>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Mobile Menu Toggle
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const navLinks = document.getElementById('navLinks');
+
+        mobileMenuBtn.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+        });
+
+        // Smooth Scrolling
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                navLinks.classList.remove('active');
+                
+                const target = document.querySelector(this.getAttribute('href'));
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            });
+        });
+
+        // Active Nav Link on Scroll
+        const sections = document.querySelectorAll('section');
+        const navLinksArray = document.querySelectorAll('.nav-link');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (pageYOffset >= sectionTop - 200) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinksArray.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href').substring(1) === current) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // Reveal Animation on Scroll
+        const reveals = document.querySelectorAll('.reveal');
+
+        function revealOnScroll() {
+            reveals.forEach(element => {
+                const elementTop = element.getBoundingClientRect().top;
+                const windowHeight = window.innerHeight;
+                
+                if (elementTop < windowHeight - 100) {
+                    element.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', revealOnScroll);
+        revealOnScroll(); // Initial check
+
+        // Upload Functionality
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const predictButton = document.getElementById('predictButton');
+        const buttonText = document.getElementById('buttonText');
+        const imagePreview = document.getElementById('imagePreview');
+        const resultDiv = document.getElementById('result');
+        let selectedFile = null;
+
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                handleFile(fileInput.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            selectedFile = file;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imagePreview.src = e.target.result;
+                imagePreview.style.display = 'block';
+                predictButton.disabled = false;
+                resultDiv.innerHTML = '';
+                resultDiv.className = '';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        predictButton.addEventListener('click', () => {
+            if (selectedFile) {
+                uploadFile(selectedFile);
+            }
+        });
+
+        function uploadFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            predictButton.disabled = true;
+            buttonText.innerHTML = '<span class="loading"></span> Analyzing...';
+
+            fetch('/predict', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                predictButton.disabled = false;
+                buttonText.textContent = 'Analyze Image';
+
+                if (data.error) {
+                    resultDiv.innerHTML = `<strong>Error:</strong> ${data.error}`;
+                    resultDiv.className = 'warning';
+                } else {
+                    const prediction = data.prediction;
+                    if (prediction === 'NORMAL') {
+                        resultDiv.innerHTML = `<strong>Result:</strong> ${prediction}<br><small>No abnormalities detected</small>`;
+                        resultDiv.className = 'success';
+                    } else {
+                        resultDiv.innerHTML = `<strong>Result:</strong> ${prediction}<br><small>Please consult a healthcare professional</small>`;
+                        resultDiv.className = 'warning';
+                    }
+                }
+            })
+            .catch(error => {
+                predictButton.disabled = false;
+                buttonText.textContent = 'Analyze Image';
+                resultDiv.innerHTML = `<strong>Error:</strong> ${error.message}`;
+                resultDiv.className = 'warning';
+            });
+        }
+    </script>
+</body>
+</html>
